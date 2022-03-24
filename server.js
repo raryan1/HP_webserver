@@ -47,15 +47,6 @@ app.get('/images', (req, res) => {
     });
   res.send(image_list)
   });
-  /*
-  fs.readFile('/Users/ryanearwaker/Desktop/TEST/TRAVIS.png' , (err, data) => {
-    if (err) {
-      console.error(err)
-      return
-    }
-    res.send(data)
-    })
-    */
 })
 
 app.post('/messages', async (req, res) => {   // testing try and catch to catch errors
