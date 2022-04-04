@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "autotrace": "^0.0.2",
     "body-parser": "^1.18.2",
     "express": "^4.15.5",
     "formidable": "^2.0.1",

@@ -5,6 +5,9 @@ var http = require('http').Server(app)
 var io = require('socket.io')(http)
 var mongoose = require('mongoose')
 var formidable = require('formidable');
+
+const autotrace = require("./convert.js"); // import functions from convert.js
+
 fs = require('fs');
 
 app.use(express.static(__dirname))
@@ -39,10 +42,15 @@ app.get('/images', (req, res) => {
   image_list = []
   fs.readdir(__dirname+'/TEST/', (err, files) => {
     files.forEach(file => {
-      extension = file.split('.').pop()
-      if (extension == 'jpg' || extension == 'png' || extension =='svg') {
+      extension = file.split('.')
+      if (extension[1] == 'jpg' || extension[1] == 'png' || extension[1] =='svg') {
         image_list.push(file)
-        console.log(file);
+        //command = 'convert ' + __dirname+'/TEST/'+file + ' ' + __dirname+'/INTER/' + extension[0] + '.pnm';
+        //command = 'sips -s format ' + extension[1] + __dirname+'/TEST/'+file + ' --out ' + __dirname+'/INTER/' + extension[0] + '.pnm'
+        //console.log(command)
+        //autotrace.runCommand(command);
+        console.log('run autotrace')
+        autotrace.convert(__dirname+'/INTER/'+ 'HP.pnm', __dirname+'/SVG/' + 'HP.svg')
       }
     });
   res.send(image_list)
