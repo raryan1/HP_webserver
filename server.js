@@ -5,8 +5,9 @@ var http = require('http').Server(app)
 var io = require('socket.io')(http)
 var mongoose = require('mongoose')
 var formidable = require('formidable');
-
-const autotrace = require("./convert.js"); // import functions from convert.js
+var autotrace = require('autotrace');
+const path = require('path');
+const { exec } = require("child_process");
 
 fs = require('fs');
 
@@ -30,6 +31,54 @@ var MessageSchema =  new Schema({ // since 'id' is not a property here, mongoose
 // Compile model from schema
 var Message = mongoose.model('Message', MessageSchema );
 
+// run autotrace
+function convert(dir, out) {
+	console.log('input dir = ' + dir);
+  console.log('output dir = ' + out);
+  autotrace()
+		.inputFile(dir)
+		.outputFile(out)
+		.outputFormat('svg')
+		.colorCount(0)			//range(0-256)
+		//.backgroundColor(0x000000)
+		.despeckleLevel(20)			//range 0-20
+		.despeckleTightness(8)  		//range 0-8
+		.cornerThreshold(300)		//degrees
+		.errorThreshold(1)			//subdivide curve if off by x pixles
+		.filterIterations(0)		//smooth curve by x many
+		.lineThreshold(0)			//make line if x close to a line
+		.cornerSurround(2)			//number of pixels to consider for corner
+
+		.exec(function(err, buffer) {
+    		if (!err) {
+					console.log('done');
+				} else {
+          console.log('Autotrace error = ' + err);
+        }
+			});
+}
+
+function asyncOperation ( command, dir, out, callback ) {
+  console.log('Command to run ' + command)
+	exec(command, (error, stdout, stderr) => {
+
+		if (error) {
+			console.log(`error: ${error.message}`);
+			return;
+		}
+		if (stderr) {
+			console.log(`stderr: ${stderr}`);
+			return;
+		}
+		console.log('stdout:' + stdout);
+		console.log('TEST')
+    if (typeof callback === 'function') {
+      console.log('callback is a function')
+      return callback(dir, out)
+    }
+	});
+}
+
 app.get('/messages', (req, res) => {
     Message.find({}, (err, messages) => {   // {} is to find all messages
         res.send(messages)
@@ -42,15 +91,22 @@ app.get('/images', (req, res) => {
   image_list = []
   fs.readdir(__dirname+'/TEST/', (err, files) => {
     files.forEach(file => {
+      console.log(file)
       extension = file.split('.')
       if (extension[1] == 'jpg' || extension[1] == 'png' || extension[1] =='svg') {
         image_list.push(file)
-        //command = 'convert ' + __dirname+'/TEST/'+file + ' ' + __dirname+'/INTER/' + extension[0] + '.pnm';
-        //command = 'sips -s format ' + extension[1] + __dirname+'/TEST/'+file + ' --out ' + __dirname+'/INTER/' + extension[0] + '.pnm'
-        //console.log(command)
-        //autotrace.runCommand(command);
-        console.log('run autotrace')
-        autotrace.convert(__dirname+'/INTER/'+ 'HP.pnm', __dirname+'/SVG/' + 'HP.svg')
+
+        command = 'convert ' + __dirname+'/TEST/'+file + ' ' + __dirname+'/INTER/' + extension[0] + '.pnm';
+
+        dir = __dirname+'/INTER/'+ extension[0] + '.pnm'
+        out = __dirname+'/SVG/' + extension[0] + '.svg'
+
+        asyncOperation ( command, dir, out, function ( dir, out, err ) {
+          //This code gets run after the async operation gets run
+
+          console.log('Inside Async')
+        	convert(dir, out)
+        });
       }
     });
   res.send(image_list)

@@ -53,11 +53,11 @@
 
 
     function addImages(){
-        $.get('http://localhost:3000/images', (data) => {
+        $.get('http://192.168.20.201:3000/images', (data) => {
             data.forEach((item, i) => {
               image_element = document.createElement("img");
               image_element.width = 500
-              image_element.src = "http://localhost:3000/" + item
+              image_element.src = "http://192.168.20.201:3000/" + item
               document.getElementById("images").appendChild(image_element);
             });
         })
@@ -68,16 +68,16 @@
     }
 
     function getMessages() {
-        $.get('http://localhost:3000/messages', (data) => {
+        $.get('http://192.168.20.201:3000/messages', (data) => {
             data.forEach(addMessage);
         })
     }
 
     function postMessage(message) {
-        $.post('http://localhost:3000/messages', message)
+        $.post('http://192.168.20.201:3000/messages', message)
     }
 
     function uploadFile(fileName) {
-        $.post('http://localhost:3000/file', fileName)
+        $.post('http://192.168.20.201:3000/file', fileName)
     }
 </script>
