@@ -4,17 +4,30 @@ var app = express()
 var http = require('http').Server(app)
 var io = require('socket.io')(http)
 var mongoose = require('mongoose')
-var formidable = require('formidable');
-var autotrace = require('autotrace');
-const path = require('path');
-const { exec } = require("child_process");
+var formidable = require('formidable')
+var autotrace = require('autotrace')
+const path = require('path')
+const { exec } = require("child_process")
+
+const fileUpload = require('express-fileupload')
+const cors = require('cors')
+const morgan = require('morgan')
+const _ = require('lodash')
 
 fs = require('fs');
 
 app.use(express.static(__dirname))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
-app.use(express.static(__dirname+'/TEST'));             //make everything in TEST avaliable as URL
+app.use(express.static(__dirname+'/TEST'))             //make everything in TEST avaliable as URL
+app.use('/form', express.static(__dirname + '/index.html'))
+
+app.use(fileUpload())
+
+//add other middleware
+app.use(cors())
+app.use(bodyParser.urlencoded({extended: true}))
+app.use(morgan('dev'))
 
 mongoose.Promise = Promise
 
@@ -113,6 +126,32 @@ app.get('/images', (req, res) => {
   });
 })
 
+// https://github.com/richardgirges/express-fileupload/tree/master/example
+app.post('/upload', function(req, res) {
+  let sampleFile;
+  let uploadPath;
+
+  if (!req.files || Object.keys(req.files).length === 0) {
+    res.status(400).send('No files were uploaded.');
+    return;
+  }
+
+  console.log('req.files >>>', req.files); // eslint-disable-line
+
+  sampleFile = req.files.sampleFile;
+
+  uploadPath = __dirname + '/TEST/' + sampleFile.name;
+
+  sampleFile.mv(uploadPath, function(err) {
+    if (err) {
+      return res.status(500).send(err);
+    }
+
+    res.send('File uploaded to ' + uploadPath);
+  });
+});
+
+
 app.post('/messages', async (req, res) => {   // testing try and catch to catch errors
 
     try {
@@ -134,27 +173,6 @@ app.post('/messages', async (req, res) => {   // testing try and catch to catch 
         res.sendStatus(500)
         return console.error(error)
     }
-})
-
-app.post('/file', async (req, res) => {
-
-  try {
-    var form = new formidable.IncomingForm();
-    form.parse(req, function (err, fields, files) {
-      var oldpath = files.filetoupload.filepath;
-      var newpath = __dirname + '/TEST/' + files.filetoupload.originalFilename;
-      fs.rename(oldpath, newpath, function (err) {
-        if (err) throw err;
-        res.write('File uploaded and moved!');
-        res.write(files.filetoupload.originalFilename);
-        filename = files.filetoupload.originalFilename; // set global filename
-        res.end();
-      });
-    });
-  } catch (error) {
-    res.sendStatus(500)
-    return console.error(error)
-  }
 })
 
 io.on('connection', (socket) => {

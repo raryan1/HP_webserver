@@ -23,12 +23,16 @@
 <div class="container">
   <div class="jumbotron">
       <h1 class="display-4">Upload File</h1>
-      <br>
-      <form action="file" method="post" enctype="multipart/form-data">
-        <input id="file" type="file" name="filetoupload">
-        <br>
-        <input type="submit">
-      </form>
+      <body>
+        <form ref='uploadForm'
+          id='uploadForm'
+          action='/upload'
+          method='post'
+          encType="multipart/form-data">
+            <input type="file" name="sampleFile" />
+            <input type='submit' value='Upload!' />
+        </form>
+    </body>
   </div>
 </div>
 <div id="images">
@@ -49,8 +53,6 @@
     })
 
     socket.on('message', addMessage)
-
-
 
     function addImages(){
         $.get('http://192.168.20.201:3000/images', (data) => {
@@ -75,9 +77,5 @@
 
     function postMessage(message) {
         $.post('http://192.168.20.201:3000/messages', message)
-    }
-
-    function uploadFile(fileName) {
-        $.post('http://192.168.20.201:3000/file', fileName)
     }
 </script>
