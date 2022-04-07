@@ -20,6 +20,10 @@ app.use(express.static(__dirname))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(express.static(__dirname+'/TEST'))             //make everything in TEST avaliable as URL
+
+app.use(express.static('SVG'))  //make everything in SVG avaliable as URL
+
+
 app.use('/form', express.static(__dirname + '/index.html'))
 
 app.use(fileUpload())
@@ -41,8 +45,15 @@ var MessageSchema =  new Schema({ // since 'id' is not a property here, mongoose
     message: String
 })
 
+var FileSchema =  new Schema({ // since 'id' is not a property here, mongoose creates and assigns one for us
+    name: String,
+})
+
 // Compile model from schema
 var Message = mongoose.model('Message', MessageSchema );
+
+// Compile model from schema
+var File = mongoose.model('File', FileSchema );
 
 // run autotrace
 function convert(dir, out) {
@@ -104,23 +115,42 @@ app.get('/images', (req, res) => {
   image_list = []
   fs.readdir(__dirname+'/TEST/', (err, files) => {
     files.forEach(file => {
-      console.log(file)
-      extension = file.split('.')
-      if (extension[1] == 'jpg' || extension[1] == 'png' || extension[1] =='svg') {
-        image_list.push(file)
+        //image_list.push(file)
+        image_list.push(file.split('.')[0] + '.svg')
 
-        command = 'convert ' + __dirname+'/TEST/'+file + ' ' + __dirname+'/INTER/' + extension[0] + '.pnm';
+        File.find({name: file}, (err, file_name_saved) => {   // Check the database to see if the filename already exists
+            console.log(file)
+            extension = file.split('.')
+            console.log('Checking database for file name')
+            console.log(file_name_saved)
+            if (extension[1] == 'jpg' || extension[1] == 'png' || extension[1] =='svg') { // Check the files extension
 
-        dir = __dirname+'/INTER/'+ extension[0] + '.pnm'
-        out = __dirname+'/SVG/' + extension[0] + '.svg'
+              if (file_name_saved == '') {  // If the file is not in the database run convert and autotrace
+                console.log('file not in datebase')
+                var file_name = new File({ name: file})
+                console.log(file_name)
 
-        asyncOperation ( command, dir, out, function ( dir, out, err ) {
-          //This code gets run after the async operation gets run
+                file_name.save((err) => { // add new file to database
+                    if (err)
+                        console.log(err)
+                    // if the message was succsessful do below
+                    console.log('Success')
+                })
 
-          console.log('Inside Async')
-        	convert(dir, out)
-        });
-      }
+                command = 'convert ' + __dirname+'/TEST/'+file + ' ' + __dirname+'/INTER/' + extension[0] + '.pnm';
+
+                dir = __dirname+'/INTER/'+ extension[0] + '.pnm'
+                out = __dirname+'/SVG/' + extension[0] + '.svg'
+
+                asyncOperation ( command, dir, out, function ( dir, out, err ) {
+                  //This code gets run after the async operation gets run
+
+                  console.log('Inside Async')
+                	convert(dir, out)
+                });
+              }
+          }
+        })
     });
   res.send(image_list)
   });
@@ -150,7 +180,6 @@ app.post('/upload', function(req, res) {
     res.send('File uploaded to ' + uploadPath);
   });
 });
-
 
 app.post('/messages', async (req, res) => {   // testing try and catch to catch errors
 
