@@ -109,14 +109,20 @@ app.get('/messages', (req, res) => {
     })
 })
 
-var extension;
+app.post('/download', (req, res) => {
+  var file = __dirname + '/SVG/' + req
+  console.dir(req.body.file)
+  res.sendStatus(200)
+  //res.download(file) // Set disposition and send it.
+})
 
 app.get('/images', (req, res) => {
+  var extension;
   image_list = []
   fs.readdir(__dirname+'/TEST/', (err, files) => {
     files.forEach(file => {
-        //image_list.push(file)
-        image_list.push(file.split('.')[0] + '.svg')
+        image_list.push(file)
+        //image_list.push(file.split('.')[0] + '.svg')
 
         File.find({name: file}, (err, file_name_saved) => {   // Check the database to see if the filename already exists
             console.log(file)

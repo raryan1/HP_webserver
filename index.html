@@ -22,7 +22,19 @@
 </div>
 <div class="container">
   <div class="jumbotron">
-      <h1 class="display-4">Upload File</h1>
+      <h1 class="display-4">Download File</h1>
+      <br>
+      <input id="download_file" class="form-control" placeholder="File">
+      <br>
+      <button id="download" class="btn btn-success">Download</button>
+  </div>
+</div>
+<div id="images">
+
+</div>
+<div class="container">
+  <div class="jumbotron">
+      <h1 class="display-4">Download File</h1>
       <body>
         <form ref='uploadForm'
           id='uploadForm'
@@ -35,9 +47,6 @@
     </body>
   </div>
 </div>
-<div id="images">
-
-</div>
 
 <script>
 
@@ -47,6 +56,10 @@
         $("#send").click(()=>{
             var message = { name: $("#name").val(), message: $("#message").val()}
             postMessage(message)
+        })
+        $("#download").click(()=>{
+            var file = {file: $("#download_file").val()}
+            postDownload(file)
         })
         getMessages()
         addImages()
@@ -78,4 +91,9 @@
     function postMessage(message) {
         $.post('http://192.168.20.201:3000/messages', message)
     }
+
+    function postDownload(file) {
+        $.post('http://192.168.20.201:3000/download', file)
+    }
+
 </script>
