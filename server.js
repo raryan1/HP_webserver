@@ -109,11 +109,18 @@ app.get('/messages', (req, res) => {
     })
 })
 
+var file
+
 app.post('/download', (req, res) => {
-  var file = __dirname + '/SVG/' + req
-  console.dir(req.body.file)
+  file = __dirname + '/SVG/' + req.body.file
+  console.dir(file)
   res.sendStatus(200)
-  //res.download(file) // Set disposition and send it.
+})
+
+app.get('/download', (req, res) => {
+    console.dir(file)
+    res.download(file) // Set disposition and send it.
+    // io.emit('message', req.body)   // found this
 })
 
 app.get('/images', (req, res) => {

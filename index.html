@@ -34,7 +34,7 @@
 </div>
 <div class="container">
   <div class="jumbotron">
-      <h1 class="display-4">Download File</h1>
+      <h1 class="display-4">Upload File</h1>
       <body>
         <form ref='uploadForm'
           id='uploadForm'
@@ -95,5 +95,12 @@
     function postDownload(file) {
         $.post('http://192.168.20.201:3000/download', file)
     }
+
+    /*
+    function getDownload() {
+      $.get('http://192.168.20.201:3000/download', (data) => {
+      })
+    }
+    */
 
 </script>
