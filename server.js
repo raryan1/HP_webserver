@@ -38,7 +38,7 @@ mongoose.Promise = Promise
 var dbUrl = 'mongodb+srv://User:9ecWyqOFmi4F3yK9@learning-node.xa1vy.mongodb.net/learning-node?retryWrites=true&w=majority'
 
 //Define a schema
-var Schema = mongoose.Schema;
+var Schema = mongoose.Schema
 
 var MessageSchema =  new Schema({ // since 'id' is not a property here, mongoose creates and assigns one for us
     name: String,
@@ -50,10 +50,10 @@ var FileSchema =  new Schema({ // since 'id' is not a property here, mongoose cr
 })
 
 // Compile model from schema
-var Message = mongoose.model('Message', MessageSchema );
+var Message = mongoose.model('Message', MessageSchema )
 
 // Compile model from schema
-var File = mongoose.model('File', FileSchema );
+var File = mongoose.model('File', FileSchema )
 
 // run autotrace
 function convert(dir, out) {
@@ -63,15 +63,15 @@ function convert(dir, out) {
 		.inputFile(dir)
 		.outputFile(out)
 		.outputFormat('svg')
-		.colorCount(0)			//range(0-256)
+		.colorCount(0)			    // Range(0-256)
 		//.backgroundColor(0x000000)
-		.despeckleLevel(20)			//range 0-20
-		.despeckleTightness(8)  		//range 0-8
-		.cornerThreshold(300)		//degrees
-		.errorThreshold(1)			//subdivide curve if off by x pixles
-		.filterIterations(0)		//smooth curve by x many
-		.lineThreshold(0)			//make line if x close to a line
-		.cornerSurround(2)			//number of pixels to consider for corner
+		.despeckleLevel(20)			// Range 0-20
+    .despeckleTightness(8)  // Range 0-8
+		.cornerThreshold(300)		// Degrees
+		.errorThreshold(1)			// Subdivide curve if off by x pixles
+		.filterIterations(0)		// Smooth curve by x many
+		.lineThreshold(0)			  // Make line if x close to a line
+		.cornerSurround(2)			// Number of pixels to consider for corner
 
 		.exec(function(err, buffer) {
     		if (!err) {
@@ -128,7 +128,10 @@ app.get('/images', (req, res) => {
   image_list = []
   fs.readdir(__dirname+'/TEST/', (err, files) => {
     files.forEach(file => {
+
         image_list.push(file)
+
+        console.log(file)
         //image_list.push(file.split('.')[0] + '.svg')
 
         File.find({name: file}, (err, file_name_saved) => {   // Check the database to see if the filename already exists
@@ -143,10 +146,10 @@ app.get('/images', (req, res) => {
                 var file_name = new File({ name: file})
                 console.log(file_name)
 
-                file_name.save((err) => { // add new file to database
+                file_name.save((err) => { // Ddd new file to database
                     if (err)
                         console.log(err)
-                    // if the message was succsessful do below
+                    // If the message was succsessful do below
                     console.log('Success')
                 })
 
@@ -156,7 +159,7 @@ app.get('/images', (req, res) => {
                 out = __dirname+'/SVG/' + extension[0] + '.svg'
 
                 asyncOperation ( command, dir, out, function ( dir, out, err ) {
-                  //This code gets run after the async operation gets run
+                  // This code gets run after the async operation gets run
 
                   console.log('Inside Async')
                 	convert(dir, out)
@@ -183,6 +186,8 @@ app.post('/upload', function(req, res) {
 
   sampleFile = req.files.sampleFile;
 
+  sampleFile.name = sampleFile.name.replace(/\s+/g, '_')  // Replace spaces with an underscore
+
   uploadPath = __dirname + '/TEST/' + sampleFile.name;
 
   sampleFile.mv(uploadPath, function(err) {
@@ -194,7 +199,7 @@ app.post('/upload', function(req, res) {
   });
 });
 
-app.post('/messages', async (req, res) => {   // testing try and catch to catch errors
+app.post('/messages', async (req, res) => {   // Testing try and catch to catch errors
 
     try {
         var message = new Message(req.body)

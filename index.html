@@ -5,6 +5,7 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
 <script src="/socket.io/socket.io.js"></script>
 
+<!--
 <div class="container">
     <br>
     <div class="jumbotron">
@@ -20,6 +21,7 @@
 
     </div>
 </div>
+-->
 <div class="container">
   <div class="jumbotron">
       <h1 class="display-4">Download File</h1>
@@ -28,9 +30,6 @@
       <br>
       <button id="download" class="btn btn-success">Download</button>
   </div>
-</div>
-<div id="images">
-
 </div>
 <div class="container">
   <div class="jumbotron">
@@ -46,6 +45,9 @@
         </form>
     </body>
   </div>
+</div>
+<div id="images">
+
 </div>
 
 <script>
@@ -69,12 +71,15 @@
     socket.on('file', getDownload)
 
     function addImages(){
-        $.get('http://192.168.20.201:3000/images', (data) => {
+        $.get('http://121.99.193.58:3000/images', (data) => {
             data.forEach((item, i) => {
-              image_element = document.createElement("img");
-              image_element.width = 500
-              image_element.src = "http://192.168.20.201:3000/" + item
-              document.getElementById("images").appendChild(image_element);
+
+              $("#images").append(`<h4> ${item} </h4>`)
+
+              //image_element = document.createElement("img");
+              //image_element.width = 500
+              //image_element.src = "http://192.168.20.201:3000/" + item
+              //document.getElementById("images").appendChild(str(item));
             });
         })
     }
@@ -84,21 +89,21 @@
     }
 
     function getMessages() {
-        $.get('http://192.168.20.201:3000/messages', (data) => {
+        $.get('http://121.99.193.58:3000/messages', (data) => {
             data.forEach(addMessage);
         })
     }
 
     function postMessage(message) {
-        $.post('http://192.168.20.201:3000/messages', message)
+        $.post('http://121.99.193.58:3000/messages', message)
     }
 
     function postDownload(file) {
-        $.post('http://192.168.20.201:3000/download', file)
+        $.post('http://121.99.193.58:3000/download', file)
     }
 
     function getDownload() {
-      window.location.href = 'http://192.168.20.201:3000/download'
+      window.location.href = 'http://121.99.193.58:3000/download'
       //$.get('http://192.168.20.201:3000/download', (data) => {
 
         //$("#messages").append(data)
