@@ -1,3 +1,9 @@
+// Author: Ryan Earwaker
+// Date modified: 19/04/2022
+// Node JS Version:
+// Description: Server side for the autotrace webserver conversion
+
+// Import required moduels
 var express = require('express')
 var bodyParser = require('body-parser')
 var app = express()
@@ -19,16 +25,15 @@ fs = require('fs');
 app.use(express.static(__dirname))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
-app.use(express.static(__dirname+'/TEST'))             //make everything in TEST avaliable as URL
-
-app.use(express.static('SVG'))  //make everything in SVG avaliable as URL
+app.use(express.static(__dirname+'/TEST'))            // Make everything in TEST avaliable as URL
+app.use(express.static('SVG'))                        // Make everything in SVG avaliable as URL
 
 
 app.use('/form', express.static(__dirname + '/index.html'))
 
 app.use(fileUpload())
 
-//add other middleware
+// Add other middleware
 app.use(cors())
 app.use(bodyParser.urlencoded({extended: true}))
 app.use(morgan('dev'))
@@ -45,8 +50,8 @@ var MessageSchema =  new Schema({ // since 'id' is not a property here, mongoose
     message: String
 })
 
-var FileSchema =  new Schema({ // since 'id' is not a property here, mongoose creates and assigns one for us
-    name: String,
+var FileSchema =  new Schema({    // since 'id' is not a property here, mongoose creates and assigns one for us
+    name: String
 })
 
 // Compile model from schema
@@ -82,10 +87,15 @@ function convert(dir, out) {
 			});
 }
 
+// First the file is converted to pnm format, once that is done without errors
+// the callback is returned, the callback in this situation is the autotrace
+// 'convert()' function. Callback is necessary to ensure synchronous operation of
+// convert followed by run autotrace
 function asyncOperation ( command, dir, out, callback ) {
   console.log('Command to run ' + command)
-	exec(command, (error, stdout, stderr) => {
 
+  // Execute specified command in the server terminal
+	exec(command, (error, stdout, stderr) => {
 		if (error) {
 			console.log(`error: ${error.message}`);
 			return;
@@ -95,7 +105,8 @@ function asyncOperation ( command, dir, out, callback ) {
 			return;
 		}
 		console.log('stdout:' + stdout);
-		console.log('TEST')
+
+    // If the command was successful, check if the callback is a function and execute
     if (typeof callback === 'function') {
       console.log('callback is a function')
       return callback(dir, out)
@@ -103,6 +114,7 @@ function asyncOperation ( command, dir, out, callback ) {
 	});
 }
 
+// Find all messages on database and send to client side
 app.get('/messages', (req, res) => {
     Message.find({}, (err, messages) => {   // {} is to find all messages
         res.send(messages)
@@ -110,19 +122,24 @@ app.get('/messages', (req, res) => {
 })
 
 var file
-
+// Post the file location to the client side
 app.post('/download', (req, res) => {
   file = __dirname + '/SVG/' + req.body.file
   console.dir(file)
-  io.emit('file', file)
-  res.sendStatus(200)
+  io.emit('file', file) // Emit a socket of the file location, allows the client side download button to navigate to the correct file
+  res.sendStatus(200) // Send OK
 })
-
+// Get information from the client side
 app.get('/download', (req, res) => {
     console.dir(file)
-    res.download(file) // Set disposition and send it.
+    res.download(file) // Call the express download function with the spesified file location
 })
 
+// Get images from server and send them to the slient side
+// This function handels all the conversion adn database operation
+// First, the image directory is read for all files, each is added to an image list
+// and compared to the image list within the database. If a new image is detected,
+// convert followed by autotrace is run. Also, the new image is added to the database.
 app.get('/images', (req, res) => {
   var extension;
   image_list = []
@@ -160,7 +177,6 @@ app.get('/images', (req, res) => {
 
                 asyncOperation ( command, dir, out, function ( dir, out, err ) {
                   // This code gets run after the async operation gets run
-
                   console.log('Inside Async')
                 	convert(dir, out)
                 });
@@ -168,7 +184,7 @@ app.get('/images', (req, res) => {
           }
         })
     });
-  res.send(image_list)
+  res.send(image_list)  // Send image list to the client side
   });
 })
 
@@ -186,7 +202,7 @@ app.post('/upload', function(req, res) {
 
   sampleFile = req.files.sampleFile;
 
-  sampleFile.name = sampleFile.name.replace(/\s+/g, '_')  // Replace spaces with an underscore
+  sampleFile.name = sampleFile.name.replace(/\s+/g, '_')  // Replace spaces with underscores
 
   uploadPath = __dirname + '/TEST/' + sampleFile.name;
 
@@ -198,26 +214,28 @@ app.post('/upload', function(req, res) {
     res.send('File uploaded to ' + uploadPath);
   });
 });
-
-app.post('/messages', async (req, res) => {   // Testing try and catch to catch errors
+// Get the new message from the client side
+app.post('/messages', async (req, res) => {
 
     try {
-        var message = new Message(req.body)
+        var message = new Message(req.body)     // Create new message object
 
+        // Await as to wait for a promise, in this case the task will
+        // wait for the message to be saved to the datebase
         var savedMessage = await message.save()
 
         console.log('saved')
 
-        var censored = await Message.findOne({ message: 'badword' })
+        var censored = await Message.findOne({ message: 'badword' })  // Check if the message was a badword
 
         if (censored)
-            await Message.remove({ _id: censored.id })
+            await Message.remove({ _id: censored.id })  // If badword remove from database
         else
-            io.emit('message', req.body)
+            io.emit('message', req.body)    // Emit the message to the client side assuming no bad word was found
 
-        res.sendStatus(200)
+        res.sendStatus(200) // Send OK status
     } catch (error) {
-        res.sendStatus(500)
+        res.sendStatus(500) // Error status
         return console.error(error)
     }
 })

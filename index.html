@@ -55,26 +55,30 @@
     var socket = io()
     var image_element
     $(() => {
+        // Run the following every time the send message button is clicked
         $("#send").click(()=>{
             var message = { name: $("#name").val(), message: $("#message").val()}
             postMessage(message)
         })
+        // Run the following every time the download button is clocked
         $("#download").click(()=>{
             var file = {file: $("#download_file").val()}
             postDownload(file)
         })
+        // Run the following on every page refresh
         getMessages()
         addImages()
     })
 
     socket.on('message', addMessage)
-    socket.on('file', getDownload)
+    socket.on('file', getDownload)  // When a file is ready for download, invoke the download link
 
     function addImages(){
+        // Get image list from the server side
         $.get('http://121.99.193.58:3000/images', (data) => {
             data.forEach((item, i) => {
 
-              $("#images").append(`<h4> ${item} </h4>`)
+              $("#images").append(`<h4> ${item} </h4>`) // Create a list of all avaliable images for download
 
               //image_element = document.createElement("img");
               //image_element.width = 500
