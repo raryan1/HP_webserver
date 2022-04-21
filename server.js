@@ -10,10 +10,11 @@ var app = express()
 var http = require('http').Server(app)
 var io = require('socket.io')(http)
 var mongoose = require('mongoose')
-var formidable = require('formidable')
 var autotrace = require('autotrace')
 const path = require('path')
 const { exec } = require("child_process")
+
+var siofu = require("socketio-file-upload");
 
 const fileUpload = require('express-fileupload')
 const cors = require('cors')
@@ -28,8 +29,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(express.static(__dirname+'/INPUT'))            // Make everything in INPUT avaliable as URL
 app.use(express.static('SVG'))                        // Make everything in SVG avaliable as URL
 
-
-app.use('/form', express.static(__dirname + '/index.html'))
+app.use(siofu.router)
 
 app.use(fileUpload())
 
@@ -188,32 +188,6 @@ app.get('/images', (req, res) => {
   });
 })
 
-// https://github.com/richardgirges/express-fileupload/tree/master/example
-app.post('/upload', function(req, res) {
-  let sampleFile;
-  let uploadPath;
-
-  if (!req.files || Object.keys(req.files).length === 0) {
-    res.status(400).send('No files were uploaded.');
-    return;
-  }
-
-  console.log('req.files >>>', req.files); // eslint-disable-line
-
-  sampleFile = req.files.sampleFile;
-
-  sampleFile.name = sampleFile.name.replace(/\s+/g, '_')  // Replace spaces with underscores
-
-  uploadPath = __dirname + '/INPUT/' + sampleFile.name;
-
-  sampleFile.mv(uploadPath, function(err) {
-    if (err) {
-      return res.status(500).send(err);
-    }
-
-    res.send('File uploaded to ' + uploadPath);
-  });
-});
 // Get the new message from the client side
 app.post('/messages', async (req, res) => {
 
@@ -242,12 +216,30 @@ app.post('/messages', async (req, res) => {
 
 io.on('connection', (socket) => {
     console.log('a user connected')
-})
 
+    var uploader = new siofu()  // Create uploader
+    uploader.dir = __dirname + '/INPUT' // Upload path
+    uploader.listen(socket) // Listen for upload
+    // Do something when a file is saved:
+    uploader.on("saved", function(event){
+        console.log('FILE UPLOADED \n ' + event.file);
+    });
+
+    // Do something when a file is saved:
+    uploader.on("saved", function(event){
+        console.log(event.file);
+    });
+
+    // Error handler:
+    uploader.on("error", function(event){
+        console.log("Error from uploader", event);
+    });
+})
+// Connect to databse
 mongoose.connect(dbUrl, { useNewUrlParser: true }, (err) => {
     console.log('mongo db connection', err)
 })
-
+// Start server and listen on port 3000
 var server = http.listen(3000, () => {
     console.log('server is listening on port', server.address().port)
 })
