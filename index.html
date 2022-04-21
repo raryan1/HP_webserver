@@ -22,15 +22,7 @@
     </div>
 </div>
 -->
-<div class="container">
-  <div class="jumbotron">
-      <h1 class="display-4">Download File</h1>
-      <br>
-      <input id="download_file" class="form-control" placeholder="File">
-      <br>
-      <button id="download" class="btn btn-success">Download</button>
-  </div>
-</div>
+<!-- Section for uploading files -->
 <div class="container">
   <div class="jumbotron">
       <h1 class="display-4">Upload File</h1>
@@ -46,8 +38,25 @@
     </body>
   </div>
 </div>
-<div id="images">
+<!-- Section viewing converted files -->
+<div class="container">
+  <div class="jumbotron">
+      <h1 class="display-4">File List</h1>
+      <br>
+      <div id="images">
 
+      </div>
+  </div>
+</div>
+<!-- Section for downloading files -->
+<div class="container">
+  <div class="jumbotron">
+      <h1 class="display-4">Download File</h1>
+      <br>
+      <input id="download_file" class="form-control" placeholder="File">
+      <br>
+      <button id="download" class="btn btn-success">Download</button>
+  </div>
 </div>
 
 <script>
@@ -60,7 +69,7 @@
             var message = { name: $("#name").val(), message: $("#message").val()}
             postMessage(message)
         })
-        // Run the following every time the download button is clocked
+        // Run the following every time the download button is clicked
         $("#download").click(()=>{
             var file = {file: $("#download_file").val()}
             postDownload(file)
@@ -78,8 +87,7 @@
         $.get('http://121.99.193.58:3000/images', (data) => {
             data.forEach((item, i) => {
 
-              $("#images").append(`<h4> ${item} </h4>`) // Create a list of all avaliable images for download
-
+              $("#images").append(`<h4> ${i+1} : ${item} </h4>`) // Create a list of all avaliable images for download
               //image_element = document.createElement("img");
               //image_element.width = 500
               //image_element.src = "http://192.168.20.201:3000/" + item

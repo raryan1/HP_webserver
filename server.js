@@ -146,10 +146,10 @@ app.get('/images', (req, res) => {
   fs.readdir(__dirname+'/INPUT/', (err, files) => {
     files.forEach(file => {
 
-        image_list.push(file)
+        //image_list.push(file)
 
         console.log(file)
-        //image_list.push(file.split('.')[0] + '.svg')
+        image_list.push(file.split('.')[0])
 
         File.find({name: file}, (err, file_name_saved) => {   // Check the database to see if the filename already exists
             console.log(file)
