@@ -25,7 +25,7 @@ fs = require('fs');
 app.use(express.static(__dirname))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
-app.use(express.static(__dirname+'/TEST'))            // Make everything in TEST avaliable as URL
+app.use(express.static(__dirname+'/INPUT'))            // Make everything in INPUT avaliable as URL
 app.use(express.static('SVG'))                        // Make everything in SVG avaliable as URL
 
 
@@ -143,7 +143,7 @@ app.get('/download', (req, res) => {
 app.get('/images', (req, res) => {
   var extension;
   image_list = []
-  fs.readdir(__dirname+'/TEST/', (err, files) => {
+  fs.readdir(__dirname+'/INPUT/', (err, files) => {
     files.forEach(file => {
 
         image_list.push(file)
@@ -170,7 +170,7 @@ app.get('/images', (req, res) => {
                     console.log('Success')
                 })
 
-                command = 'convert ' + __dirname+'/TEST/'+file + ' ' + __dirname+'/INTER/' + extension[0] + '.pnm';
+                command = 'convert ' + __dirname+'/INPUT/'+file + ' ' + __dirname+'/INTER/' + extension[0] + '.pnm';
 
                 dir = __dirname+'/INTER/'+ extension[0] + '.pnm'
                 out = __dirname+'/SVG/' + extension[0] + '.svg'
@@ -204,7 +204,7 @@ app.post('/upload', function(req, res) {
 
   sampleFile.name = sampleFile.name.replace(/\s+/g, '_')  // Replace spaces with underscores
 
-  uploadPath = __dirname + '/TEST/' + sampleFile.name;
+  uploadPath = __dirname + '/INPUT/' + sampleFile.name;
 
   sampleFile.mv(uploadPath, function(err) {
     if (err) {
