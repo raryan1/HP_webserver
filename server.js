@@ -81,6 +81,7 @@ function convert(dir, out) {
 		.exec(function(err, buffer) {
     		if (!err) {
 					console.log('done');
+          io.emit('image', out)
 				} else {
           console.log('Autotrace error = ' + err);
         }
@@ -114,6 +115,10 @@ function asyncOperation ( command, dir, out, callback ) {
 	});
 }
 
+function startConversion() {
+
+}
+
 // Find all messages on database and send to client side
 app.get('/messages', (req, res) => {
     Message.find({}, (err, messages) => {   // {} is to find all messages
@@ -132,7 +137,7 @@ app.post('/download', (req, res) => {
 // Get information from the client side
 app.get('/download', (req, res) => {
     console.dir(file)
-    res.download(file) // Call the express download function with the spesified file location
+    res.download(file + '.svg') // Call the express download function with the spesified file location
 })
 
 // Get images from server and send them to the slient side
@@ -163,7 +168,7 @@ app.get('/images', (req, res) => {
                 var file_name = new File({ name: file})
                 console.log(file_name)
 
-                file_name.save((err) => { // Ddd new file to database
+                file_name.save((err) => { // Add new file to database
                     if (err)
                         console.log(err)
                     // If the message was succsessful do below
@@ -180,11 +185,12 @@ app.get('/images', (req, res) => {
                   console.log('Inside Async')
                 	convert(dir, out)
                 });
+
               }
           }
         })
     });
-  res.send(image_list)  // Send image list to the client side
+    res.send(image_list)  // Send image list to the client side
   });
 })
 

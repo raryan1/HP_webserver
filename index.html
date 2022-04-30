@@ -89,18 +89,16 @@
 
     socket.on('message', addMessage)
     socket.on('file', getDownload)  // When a file is ready for download, invoke the download link
+    socket.on('image', addImage)  // When a file is ready for download, invoke the download link
+
+    function addImage(image){
+      $("#images").append(`<h4> ${image} </h4>`) // Create a list of all avaliable images for download
+    }
 
     function addImages(){
         // Get image list from the server side
         $.get('http://121.99.193.58:3000/images', (data) => {
-            data.forEach((item, i) => {
-
-              $("#images").append(`<h4> ${i+1} : ${item} </h4>`) // Create a list of all avaliable images for download
-              //image_element = document.createElement("img");
-              //image_element.width = 500
-              //image_element.src = "http://192.168.20.201:3000/" + item
-              //document.getElementById("images").appendChild(str(item));
-            });
+            data.forEach(addImage);
         })
     }
 
