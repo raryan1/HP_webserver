@@ -81,7 +81,9 @@ function convert(dir, out) {
 		.exec(function(err, buffer) {
     		if (!err) {
 					console.log('done');
-          io.emit('image', out)
+          let final_element = out.split('/')[out.split('/').length - 1]
+          console.log('final element is: ' + final_element)
+          io.emit('image', final_element.split('.')[0])
 				} else {
           console.log('Autotrace error = ' + err);
         }
@@ -115,8 +117,44 @@ function asyncOperation ( command, dir, out, callback ) {
 	});
 }
 
-function startConversion() {
+// Function to handle running the file conversion to SVG, input file list and returns converted files
+function startConversion(files) {
+  var extension;
+  files.forEach(file => {
+      console.log(file)
+      File.find({name: file}, (err, file_name_saved) => {   // Check the database to see if the filename already exists
+          console.log(file)
+          extension = file.split('.')
+          console.log('Checking database for file name')
+          console.log(file_name_saved)
+          if (extension[1] == 'jpg' || extension[1] == 'png' || extension[1] =='svg') { // Check the files extension
 
+            if (file_name_saved == '') {  // If the file is not in the database run convert and autotrace
+              console.log('file not in datebase')
+              var file_name = new File({ name: file})
+              console.log(file_name)
+
+              file_name.save((err) => { // Add new file to database
+                  if (err)
+                      console.log(err)
+                  // If the message was succsessful do below
+                  console.log('Success')
+              })
+
+              command = 'convert ' + __dirname+'/INPUT/'+file + ' ' + __dirname+'/INTER/' + extension[0] + '.pnm';
+
+              dir = __dirname+'/INTER/'+ extension[0] + '.pnm'
+              out = __dirname+'/SVG/' + extension[0] + '.svg'
+
+              asyncOperation ( command, dir, out, function ( dir, out, err ) {
+                // This code gets run after the async operation gets run
+                console.log('Inside Async')
+                convert(dir, out)
+              });
+            }
+        }
+      })
+  });
 }
 
 // Find all messages on database and send to client side
@@ -146,52 +184,18 @@ app.get('/download', (req, res) => {
 // and compared to the image list within the database. If a new image is detected,
 // convert followed by autotrace is run. Also, the new image is added to the database.
 app.get('/images', (req, res) => {
-  var extension;
-  image_list = []
   fs.readdir(__dirname+'/INPUT/', (err, files) => {
-    files.forEach(file => {
+    startConversion(files) // Run conversion in each image within INPUT dir
+  })
 
-        //image_list.push(file)
-
-        console.log(file)
-        image_list.push(file.split('.')[0])
-
-        File.find({name: file}, (err, file_name_saved) => {   // Check the database to see if the filename already exists
-            console.log(file)
-            extension = file.split('.')
-            console.log('Checking database for file name')
-            console.log(file_name_saved)
-            if (extension[1] == 'jpg' || extension[1] == 'png' || extension[1] =='svg') { // Check the files extension
-
-              if (file_name_saved == '') {  // If the file is not in the database run convert and autotrace
-                console.log('file not in datebase')
-                var file_name = new File({ name: file})
-                console.log(file_name)
-
-                file_name.save((err) => { // Add new file to database
-                    if (err)
-                        console.log(err)
-                    // If the message was succsessful do below
-                    console.log('Success')
-                })
-
-                command = 'convert ' + __dirname+'/INPUT/'+file + ' ' + __dirname+'/INTER/' + extension[0] + '.pnm';
-
-                dir = __dirname+'/INTER/'+ extension[0] + '.pnm'
-                out = __dirname+'/SVG/' + extension[0] + '.svg'
-
-                asyncOperation ( command, dir, out, function ( dir, out, err ) {
-                  // This code gets run after the async operation gets run
-                  console.log('Inside Async')
-                	convert(dir, out)
-                });
-
-              }
-          }
-        })
+  fs.readdir(__dirname+'/SVG/', (err, files) => {
+    let image_list = []
+    files.forEach((file, i) => {
+      image_list.push(file.split('.')[0])
     });
-    res.send(image_list)  // Send image list to the client side
-  });
+
+    res.send(image_list)
+  })
 })
 
 // Get the new message from the client side
