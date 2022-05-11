@@ -122,6 +122,7 @@ function startConversion(files) {
   var extension;
   files.forEach(file => {
       console.log(file)
+
       File.find({name: file}, (err, file_name_saved) => {   // Check the database to see if the filename already exists
           console.log(file)
           extension = file.split('.')
@@ -184,18 +185,36 @@ app.get('/download', (req, res) => {
 // and compared to the image list within the database. If a new image is detected,
 // convert followed by autotrace is run. Also, the new image is added to the database.
 app.get('/images', (req, res) => {
-  fs.readdir(__dirname+'/INPUT/', (err, files) => {
-    startConversion(files) // Run conversion in each image within INPUT dir
-  })
+  //fs.readdir(__dirname+'/INPUT/', (err, files) => {
+  //  startConversion(files) // Run conversion in each image within INPUT dir
+  //})
 
-  fs.readdir(__dirname+'/SVG/', (err, files) => {
-    let image_list = []
-    files.forEach((file, i) => {
-      image_list.push(file.split('.')[0])
-    });
+  const dir = __dirname+'/SVG/'
+  var files;
 
-    res.send(image_list)
-  })
+  fs.readdir(dir, function(err, files){
+    files = files.map(function (fileName) {
+      return {
+        name: fileName.split('.')[0],
+        time: fs.statSync(dir + '/' + fileName).mtime.getTime()
+      };
+    })
+    .sort(function (a, b) {
+      return a.time - b.time; })
+    .map(function (v) {
+      return v.name; });
+      res.send(files)
+  });
+
+
+  //fs.readdir(__dirname+'/SVG/', (err, files) => {
+    //let image_list = []
+    //files.forEach((file, i) => {
+      //image_list.push(file.split('.')[0])
+    //});
+
+    //res.send(image_list)
+  //})
 })
 
 // Get the new message from the client side
@@ -231,13 +250,34 @@ io.on('connection', (socket) => {
     uploader.dir = __dirname + '/INPUT' // Upload path
     uploader.listen(socket) // Listen for upload
     // Do something when a file is saved:
+
     uploader.on("saved", function(event){
+        event.file.base = event.file.name
+        event.file.pathName = __dirname + '/INPUT/' + event.file.name
+        event.file.path = __dirname + '/INPUT/' + event.file.name
+        console.log("the base name is: " + event.file.base)
         console.log('FILE UPLOADED \n ' + event.file);
     });
 
     // Do something when a file is saved:
     uploader.on("saved", function(event){
         console.log(event.file);
+
+        // Re name files to avoid white space, also re read dir and run autotrace
+        fs.readdir(__dirname+'/INPUT/', (err, files) => {
+          files.forEach((file) => {
+            fs.rename(__dirname+'/INPUT/' + file, __dirname+'/INPUT/' + file.replace(/\s/g, "_"), function (err) {
+              if (err) throw err;
+              console.log('File Renamed.');
+            });
+          });
+          fs.readdir(__dirname+'/INPUT/', (err, files) => {
+            startConversion(files)
+          })
+        })
+
+
+
     });
 
     // Error handler:
