@@ -80,7 +80,9 @@
         // Run the following every time the download button is clicked
         $("#download").click(()=>{
             var file = {file: $("#download_file").val()}
-            postDownload(file)
+            if (file) {
+              postDownload(file)
+            }
         })
         // Run the following on every page refresh
         getMessages()

@@ -168,10 +168,14 @@ app.get('/messages', (req, res) => {
 var file
 // Post the file location to the client side
 app.post('/download', (req, res) => {
-  file = __dirname + '/SVG/' + req.body.file
-  console.dir(file)
-  io.emit('file', file) // Emit a socket of the file location, allows the client side download button to navigate to the correct file
-  res.sendStatus(200) // Send OK
+  if (req.body.file) {
+    file = __dirname + '/SVG/' + req.body.file
+    console.dir(file)
+    io.emit('file', file) // Emit a socket of the file location, allows the client side download button to navigate to the correct file
+    res.sendStatus(200) // Send OK
+  } else {
+    res.sendStatus(404)
+  }
 })
 // Get information from the client side
 app.get('/download', (req, res) => {
